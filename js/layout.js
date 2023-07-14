@@ -16,6 +16,8 @@ var routeIds = [];
 var waypoints = [];
 var routingControl = null;
 var currentRouteId = null;
+var busCount = 0;
+var oldBusIds = [];
 var currentOrder = 0;
 var oldE = null;
 var busMarkers = [];
@@ -31,13 +33,24 @@ const getRouteDetails = async (routeId) => {
     return data;
 }
 
+const getBusDetails = async (busId) => {
+  const response = await fetch('https://fbus-final.azurewebsites.net/api/buses/' + busId, {
+    method: 'GET',
+    headers: {
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZCI6IjIiLCJSb2xlIjoiQWRtaW4iLCJleHAiOjE2OTEzMDM0ODEsImlzcyI6IkZCdXNfU1dQIiwiYXVkIjoiRkJ1c19TV1AifQ.vXkop_kEtzEEx3BD-3gT5E4EEVivpMSHNLJ3VChOYGs'
+    }
+  })
+  const data = await response.json();
+  return data;
+}
+
 const createBoardForRoute = (routeDetails, active) => {
     const carouselItem = document.createElement('div');
     carouselItem.classList.add('carousel-item');
     if (active) {
         carouselItem.classList.add('active');
     }
-    carouselItem.setAttribute('data-bs-interval', '20000');
+    carouselItem.setAttribute('data-bs-interval', '5000');
 
     const boardContainter = document.createElement('div');
     boardContainter.classList.add('board-container');
@@ -161,7 +174,17 @@ const changeRoute = (e, mapObj) => {
                 currentRouteId = routeId;
                 routingControl.setWaypoints(waypoints[i].coor);
                 routingControl.route();
-                setBusMarkers(routeId, mapObj)
+                for (const busMarker of busMarkers) {
+                    for (const bus of busMarker.buses) {
+                        mapObj.removeLayer(bus.marker);
+                    }
+                }
+                busMarkers = [];
+                busCount = 0;
+                oldBusIds = [];
+                start = true;
+                console.log('current ' + currentRouteId);
+                setBusMarkers(currentRouteId, mapObj)
                 break;
             }
         }
@@ -180,7 +203,17 @@ const changeRoute = (e, mapObj) => {
                     currentRouteId = routeId;
                     routingControl.setWaypoints(waypoints[i].coor);
                     routingControl.route();
-                    setBusMarkers(routeId, mapObj)
+                    for (const busMarker of busMarkers) {
+                        for (const bus of busMarker.buses) {
+                            mapObj.removeLayer(bus.marker);
+                        }
+                    }
+                    busMarkers = [];
+                    busCount = 0;
+                    oldBusIds = [];
+                    start = true;
+                    console.log('current ' + currentRouteId);
+                    setBusMarkers(currentRouteId, mapObj)
                     break;
                 }
             }
@@ -190,137 +223,68 @@ const changeRoute = (e, mapObj) => {
 }
 
 const setBusMarkers = async (routeId, mapObj) => {
-    var busData = await getBusData(routeId);
-    var busIds = Object.keys(busData);
 
-    const busRef = ref(database, 'locations/' + routeId + "/");
-    onValue(busRef, (snapshot) => {
-        if (start == false) {
-            busData = snapshot.val();
-            busIds = Object.keys(busData);
+    var newRouteData;
+    var newRouteIds;
+    var busData;
+    var busIds;
 
-            for (const busMarker of busMarkers) {
-                    for (const bus of busMarker.buses) {
-                        mapObj.removeLayer(bus.marker);
-                    }
-            }
+    if (start) {
+        start = false;
+        busData = await getBusData(routeId);
+        busIds = Object.keys(busData);
+        var buses = [];
+        for (const busId of busIds) {
+            console.log('busId ' + busId)
+            var busDetails = await getBusDetails(busId);
+            var licensePlate = busDetails.licensePlate;
+            licensePlate = licensePlate.substring(0,3) + '-' + licensePlate.substring(3)
+            var newMarker = L.marker([busData[busId].latitude, busData[busId].longitude], {
+                icon: new L.DivIcon({
+                    className: 'my-div-icon',
+                    html: '<img class="my-div-image" src="../img/bus.png"/>' + '<span class="my-div-span">' + licensePlate + '</span>'
+                })
+            });
+            buses.push({
+                busId: busId,
+                marker: newMarker.addTo(mapObj)
+            })
+        }
+        busMarkers.push({
+            routeId: routeId,
+            buses: buses
+        })
 
-            for (const busId of busIds) {
-                if (busMarkers.some(busMarker => busMarker.routeId == routeId)) {
-                    var marker;
-                    var buses = [];
-                    for (const busMarker of busMarkers) {
-                        if (busMarker.routeId == routeId) {
-                            marker = busMarker;
-                            buses = busMarker.buses;
-                            break;
-                        }
-                    }
-                    if (buses.some(bus => bus.busId == busId)) {
-                        for (const bus of marker.buses) {
-                            if (bus.busId == busId) {
-                                bus.marker.setLatLng([busData[busId].latitude, busData[busId].longitude]);
-                                console.log(bus.marker.getLatLng());
-                                bus.marker.addTo(mapObj);
+        const busRef = ref(database, 'locations/')
+        onValue(busRef, (snapshot) => {
+            newRouteData = snapshot.val();
+            newRouteIds = Object.keys(newRouteData);
+
+            for (const routeId of newRouteIds) {
+                if (routeId == currentRouteId) {
+                    busIds = Object.keys(newRouteData[routeId])
+                    for (const busId of busIds) {
+                        for (const busMarker of busMarkers) {
+                            if (busMarker.routeId == currentRouteId) {
+                                var oldBuses = busMarker.buses;
+                                var newBuses = newRouteData[routeId];
+                                for (const bus of oldBuses) {
+                                    if (bus.busId == busId) {
+                                        mapObj.removeLayer(bus.marker);
+                                        bus.marker.setLatLng([newBuses[busId].latitude, newBuses[busId].longitude])
+                                        bus.marker.addTo(mapObj);
+                                        break;
+                                    }
+                                }
                                 break;
                             }
                         }
-                    } else {
-                        var newMarker = L.marker([busData[busId].latitude, busData[busId].longitude], { 
-                            icon: new L.DivIcon({
-                                className: 'my-div-icon',
-                                html: '<img class="my-div-image" src="../img/bus.png"/>' + '<span class="my-div-span">BusId ' + busId + '</span>'
-                            })
-                        });
-                        marker.buses.push({
-                            busId: busId,
-                            marker: newMarker
-                        })
-                        newMarker.bindTooltip("BusId " + busId).openTooltip();
-                        newMarker.addTo(mapObj);
-                    }
-                } else {
-                    var newMarker = L.marker([busData[busId].latitude, busData[busId].longitude], { 
-                        icon: new L.DivIcon({
-                            className: 'my-div-icon',
-                            html: '<img class="my-div-image" src="../img/bus.png"/>' + '<span class="my-div-span">BusId ' + busId + '</span>'
-                        })
-                    });
-                    busMarkers.push({
-                        routeId: routeId,
-                        buses: [{
-                            busId: busId,
-                            marker: newMarker
-                        }]
-                    })
-                    newMarker.bindTooltip("BusId " + busId).openTooltip();
-                    newMarker.addTo(mapObj);
-                }
-            }
-        }
-    })
-    if (start) {
-        for (const busMarker of busMarkers) {
-            if (busMarker.routeId != routeId) {
-                for (const bus of busMarker.buses) {
-                    mapObj.removeLayer(bus.marker);
-                }
-            }
-        }
-        for (const busId of busIds) {
-            if (busMarkers.some(busMarker => busMarker.routeId == routeId)) {
-                var marker;
-                var buses = [];
-                for (const busMarker of busMarkers) {
-                    if (busMarker.routeId == routeId) {
-                        marker = busMarker;
-                        buses = busMarker.buses;
                         break;
                     }
+                    break;
                 }
-                if (buses.some(bus => bus.busId == busId)) {
-                    for (const bus of marker.buses) {
-                        if (bus.busId == busId) {
-                            bus.marker.setLatLng([busData[busId].latitude, busData[busId].longitude]);
-                            bus.marker.addTo(mapObj);
-                            break;
-                        }
-                    }
-                } else {
-                    var newMarker = L.marker([busData[busId].latitude, busData[busId].longitude], { 
-                        icon: new L.DivIcon({
-                            className: 'my-div-icon',
-                            html: '<img class="my-div-image" src="../img/bus.png"/>' + '<span class="my-div-span">BusId ' + busId + '</span>'
-                        })
-                    });
-                    marker.buses.push({
-                        busId: busId,
-                        marker: newMarker
-                    })
-                    newMarker.bindTooltip("BusId " + busId).openTooltip();
-                    newMarker.addTo(mapObj);
-                }
-            } else {
-                var newMarker = L.marker([busData[busId].latitude, busData[busId].longitude], { 
-                    icon: new L.DivIcon({
-                        className: 'my-div-icon',
-                        html: '<img class="my-div-image" src="../img/bus.png"/>' + '<span class="my-div-span">BusId ' + busId + '</span>'
-                    })
-                });
-                busMarkers.push({
-                    routeId: routeId,
-                    buses: [{
-                        busId: busId,
-                        marker: newMarker
-                    }]
-                })
-                newMarker.bindTooltip("BusId " + busId).openTooltip();
-                newMarker.addTo(mapObj);
             }
-            console.log('bus ' + busId)
-        }
-        start = false;
-        console.log(busMarkers)
+        })
     }
 }
 
@@ -356,14 +320,13 @@ export async function createRouteBoards(mapObj) {
                 waypoints: waypoints[currentOrder].coor,
                 fitSelectedRoutes: true,
                 lineOptions: {
-                    styles: [{color: '#e8772e', opacity: 1, weight: 5}]                    
+                    styles: [{ color: '#e8772e', opacity: 1, weight: 5 }]
                 },
-                createMarker: function(i, waypoint, numbers){
-                    console.log(waypoint.latLng)
+                createMarker: function (i, waypoint, numbers) {
                     return L.marker(waypoint.latLng, {
                         icon: new L.DivIcon({
                             className: 'my-div-icon',
-                            html: '<img class="station-div-image" src="../img/bus-station.png"/>' + '<span class="station-div-span">' + (i+1) + '</span>'
+                            html: '<img class="station-div-image" src="../img/bus-station.png"/>' + '<span class="station-div-span">' + (i + 1) + '</span>'
                         })
                     })
                 }
