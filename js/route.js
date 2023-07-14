@@ -11,8 +11,9 @@ var currentCoor = 0;
 var currentRouteId = null;
 
 const firebaseConfig = {
-  databaseURL: "https://fbus-388009-default-rtdb.asia-southeast1.firebasedatabase.app/"
+  // databaseURL: "https://fbus-388009-default-rtdb.asia-southeast1.firebasedatabase.app/"
   // databaseURL: 'https://fbus-public-map-default-rtdb.asia-southeast1.firebasedatabase.app'
+  databaseURL: "https://f-bus-map-default-rtdb.firebaseio.com/"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -34,12 +35,15 @@ onValue(routeRef, async (snapshot) => {
       for (var i = 0; i < oldKeys.length; i++) {
         if (oldKeys[i] != newKeys[i]) {
           routeDataChanged = true;
+          console.log(routeDataChanged);
           break;
         }
       }
     } else {
       routeDataChanged = true;
+      console.log(routeDataChanged);
     }
+    routeData = newRouteData;
   }
   routeIds = Object.keys(routeData);
 })
@@ -88,6 +92,8 @@ export { routeDataChanged , busDataChanged}
 export async function getRouteData() {
   await until(_ => routeData != null);
   routeDataChanged = false;
+  console.log(routeData)
+  console.log(routeDataChanged);
   return routeData;
 }
 

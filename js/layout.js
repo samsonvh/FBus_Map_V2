@@ -3,8 +3,9 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.0.0/firebas
 import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js';
 
 const firebaseConfig = {
-    databaseURL: "https://fbus-388009-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    // databaseURL: "https://fbus-388009-default-rtdb.asia-southeast1.firebasedatabase.app/"
     // databaseURL: 'https://fbus-public-map-default-rtdb.asia-southeast1.firebasedatabase.app'
+    databaseURL: "https://f-bus-map-default-rtdb.firebaseio.com/"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -193,19 +194,15 @@ const setBusMarkers = async (routeId, mapObj) => {
     var busIds = Object.keys(busData);
 
     const busRef = ref(database, 'locations/' + routeId + "/");
-    onValue(busRef, async (snapshot) => {
+    onValue(busRef, (snapshot) => {
         if (start == false) {
             busData = snapshot.val();
             busIds = Object.keys(busData);
 
-            console.log(busMarkers)
-
             for (const busMarker of busMarkers) {
-                if (busMarker.routeId != routeId) {
                     for (const bus of busMarker.buses) {
                         mapObj.removeLayer(bus.marker);
                     }
-                }
             }
 
             for (const busId of busIds) {
@@ -223,6 +220,7 @@ const setBusMarkers = async (routeId, mapObj) => {
                         for (const bus of marker.buses) {
                             if (bus.busId == busId) {
                                 bus.marker.setLatLng([busData[busId].latitude, busData[busId].longitude]);
+                                console.log(bus.marker.getLatLng());
                                 bus.marker.addTo(mapObj);
                                 break;
                             }
