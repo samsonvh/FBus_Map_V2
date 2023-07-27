@@ -1,294 +1,49 @@
 * {
-    margin: 0;
     padding: 0;
+    margin: 0;
     border: 0;
     font-size: 100%;
 }
 
-html,
-body,
-.main-container {
-    width: 100vw;
+body {
     height: 100vh;
+    width: 100vw;
 }
 
-.logo-container {
-    position: absolute;
-    z-index: 1000;
-    top: 10px;
-    left: 54px;
-    width: calc(21rem - 44px);
-    background-color: #fff;
-    border-radius: 50px;
+#main-container{
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+#logo-container {
+    margin: 2vh 0;
 }
 
 #logo {
+    display: block;
     margin: auto;
-    display: block;
-    height: 64px;
+    height: 5vh;
 }
 
-#my-map-carousel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1000;
+#map-container{
+    height: 100%;
+    width: 100%;
+}
+
+#route-list{
+    float: left;
+    width: 20vw;
     height: 100vh;
-    width: calc(22rem);
+    padding: 1vh 1% 2vh;
 }
 
-.leaflet-routing-container {
-    display: none;
+.carousel-item{
+    height: 100%;
 }
 
-.map-div {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 0;
+#route-map{
+    float: right;
+    width: 80vw;
     height: 100vh;
-    width: 100vw;
-}
-
-.board-container {
-    position: absolute;
-    z-index: 1000;
-    top: 75px;
-    margin: 10px;
-}
-
-.board {
-    margin-bottom: 12px;
-    box-shadow: 0px 4px 10px #888;
-    border-radius: 10px;
-}
-
-.board-title-container {
-    padding: 10px 20px;
-    box-shadow: 0px 4px 4px #eee;
-    background-color: #fff;
-    border-radius: 10px;
-    opacity: 0.7;
-}
-
-.board-title {
-    margin: 0;
-    font-weight: 700;
-    font-size: larger;
-    color: #e8772e;
-}
-
-.board-content-container {
-    display: flex;
-    padding: 10px 20px;
-    width: 20rem;
-    background-color: #fff;
-    border-radius: 10px;
-    opacity: 0.7;
-}
-
-.board-station-content-container {
-    display: block !important;
-}
-
-.board-content-container p {
-    margin: 0;
-}
-
-.route-property-container {
-    margin-right: 8px;
-}
-
-.route-property {
-    font-weight: 600;
-    text-align: right
-}
-
-/* Station List */
-.station-container {
-    font-size: larger;
-    display: flex;
-    margin-top: 8px;
-    margin-bottom: 12px;
-}
-
-.station-order-container {
-    display: flex;
-    align-items: center;
-    margin-right: 20px;
-}
-
-.station-order {
-    margin: auto;
-    font-weight: 700;
-    font-size: larger;
-    color: #e8772e;
-}
-
-.station-name {
-    font-weight: 700;
-}
-
-.station-address {
-    font-size: medium;
-}
-
-.my-div-icon {
-    display: block;
-    background-color: #fff;
-}
-
-.my-div-image {
-    position: absolute;
-    top: -24px;
-    left: -32px;
-    height: 70px;
-    width: 70px;
-}
-
-.my-div-span {
-    position: absolute;
-    padding: 12px;
-    border-radius: 40px;
-    box-shadow: 0px 4px 20px #888;
-    top: -74px;
-    left: -70px;
-    display: block;
-    background-color: #fff;
-    font-size: 1.5rem;
-    font-weight: 600;
-    text-align: center;
-    width: max-content;
-}
-
-.station-div-image {
-    position: absolute;
-    opacity: 0.8;
-    top: -40px;
-    left: -18px;
-    height: 3rem;
-    width: 3rem;
-}
-
-.station-div-span {
-    position: absolute;
-    padding: 0 12px;
-    border-radius: 100%;
-    box-shadow: 0px 4px 20px #888;
-    opacity: 0.8;
-    top: -5.6rem;
-    left: -16px;
-    display: block;
-    background-color: #fff;
-    font-size: 2rem;
-    font-weight: 700;
-    color: #e8772e;
-    text-align: center;
-    width: max-content;
-}
-
-@media screen and (max-height: 700px) {
-    .logo-container {
-        position: absolute;
-        z-index: 1000;
-        top: 10px;
-        left: 54px;
-        width: calc(13rem - 44px);
-        background-color: #fff;
-        border-radius: 50px;
-    }
-
-    #logo {
-        margin: auto;
-        display: block;
-        height: 2rem;
-    }
-
-    .board-container {
-        position: absolute;
-        z-index: 1000;
-        top: calc(2rem + 10px);
-        margin: 10px;
-    }
-
-    .board {
-        margin-bottom: 12px;
-        box-shadow: 0px 4px 10px #888;
-        border-radius: 10px;
-    }
-
-    .board-title-container {
-        padding: 5px 16px;
-        box-shadow: 0px 4px 4px #eee;
-        background-color: #fff;
-        border-radius: 10px;
-        opacity: 0.7;
-    }
-
-    .board-title {
-        margin: 0;
-        font-weight: 700;
-        font-size: medium;
-        color: #e8772e;
-    }
-
-    .board-content-container {
-        display: flex;
-        padding: 4px 12px;
-        width: 15rem;
-        background-color: #fff;
-        border-radius: 10px;
-        opacity: 0.7;
-    }
-
-    .board-station-content-container {
-        display: block !important;
-    }
-
-    .board-content-container p {
-        margin: 0;
-    }
-
-    .route-property-container {
-        margin-right: 8px;
-    }
-
-    .route-property {
-        font-weight: 600;
-        text-align: right;
-        font-size: smaller;
-    }
-
-    .route-value {
-        font-size: smaller;
-    }
-
-    /* Station List */
-    .station-container {
-        font-size: small;
-        display: flex;
-        margin-top: 8px;
-        margin-bottom: 12px;
-    }
-
-    .station-order-container {
-        display: flex;
-        align-items: center;
-        margin-right: 12px;
-    }
-
-    .station-order {
-        margin: auto;
-        font-weight: 700;
-        font-size: larger;
-        color: #e8772e;
-    }
-
-    .station-name {
-        font-weight: 700;
-    }
-
-    .station-address {
-        font-size: small;
-    }
 }

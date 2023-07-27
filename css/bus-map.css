@@ -1,0 +1,60 @@
+/* Station Icon: BEGIN */
+.station-icon-container {
+    position: relative;
+    margin-top: -3rem;
+    margin-left: -2rem;
+}
+
+.station-div-image {
+    display: block;
+    margin: auto;
+    height: 4rem;
+}
+
+.station-div-span{
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid;
+    border-radius: 1rem;
+    width: max-content;
+    top: -2.5rem;
+    left: 50%;
+    transform: translateX(-44%);
+    padding: 0.5rem;
+    font-size: larger;
+    font-weight: 700;
+}
+/* Station Icon: END */
+
+/* Bus Icon: BEGIN */
+.bus-icon-container {
+    position: relative;
+    margin-top: -3.5rem;
+    margin-left: -1.5rem;
+}
+
+.bus-div-image{
+    display: block;
+    height: 4rem;
+}
+
+.bus-div-span{
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid;
+    border-radius: 1rem;
+    width: max-content;
+    top: -2.5rem;
+    left: 50%;
+    transform: translateX(-32%);
+    padding: 0.5rem;
+    font-size: larger;
+    font-weight: 700;
+}
+/* Bus Icon: ENDING */
+
+/* Route Map: BEGIN*/
+.leaflet-routing-container{
+    display: none;
+}
+/* Route Map: END */

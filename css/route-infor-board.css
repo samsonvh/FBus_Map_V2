@@ -1,0 +1,64 @@
+.board-container {
+    height: 100%;
+}
+
+.board-title {
+    font-weight: 700;
+    font-size: 2vh;
+    color: #e8772e;
+    margin: 0 auto;
+    margin-top: 1vh;
+    margin-bottom: 0.5vh;
+}
+
+.board-content-container {
+    display: flex;
+    padding: 0 12px;
+}
+
+/* Route Board: BEGIN */
+.route-property-container {
+    margin-right: 8px;
+}
+
+.route-property {
+    font-weight: 700;
+    text-align: right;
+    margin-bottom: 0;
+    font-size: 1.8vh;
+}
+
+.route-value {
+    margin-bottom: 0;
+    font-size: 1.8vh;
+}
+
+/* Route Board: END */
+
+/* Station Board: BEGIN */
+.board-station-content-container {
+    display: block !important;
+}
+
+.station-container {
+    display: flex;
+}
+
+.station-order-container {
+    padding-right: 20px;
+    font-weight: 700;
+    font-size: 2vh;
+    color: #e8772e;
+}
+
+.station-name {
+    font-weight: 700;
+    font-size: 1.8vh;
+    margin-bottom: 0px;
+}
+
+.station-address {
+    font-size: 1.8vh;
+}
+
+/* Station Board: END */
