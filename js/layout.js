@@ -259,7 +259,7 @@ const trackBus = (routeId, firstStation, mapObj) => {
                     addWaypoints: false,
                     draggableWaypoints: false,
                     lineOptions: {
-                        styles: [{ pane: 'pane1', color: '#82CD47', opacity: 1, weight: 5, }]
+                        styles: [{ pane: 'pane2', color: '#82CD47', opacity: 1, weight: 5, }]
                     },
                     createMarker: function (i, waypoint, numbers) {
                         var marker = L.marker(waypoint.latLng, {
@@ -286,56 +286,6 @@ const trackBus = (routeId, firstStation, mapObj) => {
                 newBusLine.addTo(mapObj);
             }
         }
-
-        // if (routeId == currentRouteId) {
-        //     for (const busId of busIds) {
-        //         for (const busMarker of busMarkers) {
-        //             if (busMarker.routeId != routeId) {
-        //                 mapObj.
-        //             }
-        //         }
-        //         const latitude = busData[busId].latitude;
-        //         const longitude = busData[busId].longitude;
-        //         var newBusMarker = L.marker([latitude, longitude], {
-        //             icon: new L.DivIcon({
-        //                 className: 'my-div-icon',
-        //                 html: '<div class="bus-icon-container"> <span class="bus-div-span">BusId</span> <img class="bus-div-image" src="../img/bus-station.png"/> </div>'
-        //             })
-        //         }).addTo(mapObj);
-        //         var newBusLine = L.Routing.control({
-        //             waypoints: [
-        //                 L.latLng(firstStation.latitude, firstStation.longitude),
-        //                 L.latLng(latitude, longitude)
-        //             ],
-        //             fitSelectedRoutes: true,
-        //             addWaypoints: false,
-        //             draggableWaypoints: false,
-        //             lineOptions: {
-        //                 styles: [{ pane: 'pane1', color: '#82CD47', opacity: 1, weight: 5, }]
-        //             },
-        //             createMarker: function (i, waypoint, numbers) {
-        //                 var marker = L.marker(waypoint.latLng, {
-        //                     icon: new L.DivIcon({
-        //                         className: 'my-div-icon',
-        //                         html: ''
-        //                     })
-        //                 });
-        //                 marker.setZIndexOffset(1000);
-        //                 return marker;
-        //             }
-        //         }).addTo(mapObj);
-        //         busMarkers.push({
-        //             routeId: routeId,
-        //             buses: [
-        //                 {
-        //                     busId: busId,
-        //                     marker: newBusMarker,
-        //                     busLine: newBusLine
-        //                 }
-        //             ]
-        //         });
-        //     }
-        // }
     });
 }
 
