@@ -19,10 +19,10 @@
     width: max-content;
     top: -2.5rem;
     left: 50%;
-    transform: translateX(-44%);
     padding: 0.5rem;
     font-size: larger;
     font-weight: 700;
+    color: #e8772e;
 }
 /* Station Icon: END */
 

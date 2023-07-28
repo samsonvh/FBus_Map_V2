@@ -29,6 +29,12 @@ const getRouteDetails = async (routeId) => {
     return data;
 };
 
+const getBusDetails = async(busId) => {
+    const response = await fetch('https://fbus-last.azurewebsites.net/api/Buses/' + busId);
+    const data = await response.json();
+    return data;
+}
+
 //  Create Board
 const createRouteBoard = (routeDetails, active) => {
     //  Init route item
@@ -158,7 +164,7 @@ const createStationBoard = (carouselItem, stations) => {
 
 const trackBus = (routeId, firstStation, mapObj) => {
     const busRef = ref(database, 'locations/' + routeId + '/');
-    onValue(busRef, (snapshot) => {
+    onValue(busRef, async (snapshot) => {
         var busData = snapshot.val();
         var busIds = Object.keys(busData);
         var showed = false;
@@ -176,6 +182,8 @@ const trackBus = (routeId, firstStation, mapObj) => {
         var currentBusMarker = null;
         var currentBuses = null;
         for (const busId of busIds) {
+            var busDetails = await getBusDetails(busId);
+
             if (existed == false) {
                 for (const busMarker of busMarkers) {
                     if (busMarker.routeId == routeId) {
@@ -210,7 +218,7 @@ const trackBus = (routeId, firstStation, mapObj) => {
                     var newBusMarker = L.marker([latitude, longitude], {
                         icon: new L.DivIcon({
                             className: 'my-div-icon',
-                            html: '<div class="bus-icon-container"> <span class="bus-div-span">BusId</span> <img class="bus-div-image" src="../img/bus-station.png"/> </div>'
+                            html: '<div class="bus-icon-container"> <span class="bus-div-span">' + busDetails.licensePlate + '</span> <img class="bus-div-image" src="../img/bus-station.png"/> </div>'
                         })
                     }).addTo(mapObj);
                     var newBusLine = L.Routing.control({
@@ -248,7 +256,7 @@ const trackBus = (routeId, firstStation, mapObj) => {
                 var newBusMarker = L.marker([latitude, longitude], {
                     icon: new L.DivIcon({
                         className: 'my-div-icon',
-                        html: '<div class="bus-icon-container"> <span class="bus-div-span">BusId</span> <img class="bus-div-image" src="../img/bus-station.png"/> </div>'
+                        html: '<div class="bus-icon-container"> <span class="bus-div-span">' + busDetails.licensePlate + '</span> <img class="bus-div-image" src="../img/bus-station.png"/> </div>'
                     })
                 });
                 var newBusLine = L.Routing.control({
@@ -357,7 +365,8 @@ export async function createRouteBoards(mapObj) {
                     var marker = L.marker(waypoint.latLng, {
                         icon: new L.DivIcon({
                             className: 'my-div-icon',
-                            html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span><img class="station-div-image" alt="Station" src="../img/station.png"/></div>'
+                            // html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span><img class="station-div-image" alt="Station" src="../img/station.png"/></div>'
+                            html: '<div class="station-icon-container"><span class="station-div-span">' + (i+1) + '</span><img class="station-div-image" alt="Station" src="../img/station.png"/></div>'
                         })
                     });
                     marker.setZIndexOffset(30000);
