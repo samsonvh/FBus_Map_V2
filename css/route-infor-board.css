@@ -47,8 +47,17 @@
 .station-order-container {
     padding-right: 20px;
     font-weight: 700;
-    font-size: 2vh;
+    font-size: 3vh;
     color: #e8772e;
+}
+
+.station-order {
+    margin: -0.5vh auto 1vh;
+    width: fit-content;
+}
+
+.station-item-img {
+    width: 1.7rem;
 }
 
 .station-name {

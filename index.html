@@ -29,9 +29,8 @@
                 <div id="logo-container">
                     <img src="/img/fbus-logo.png" alt="logo" id="logo">
                 </div>
-
             </div>
-            <div id="route-map" class="map-div"></div>
+            <div id="route-map"></div>
         </div>
     </div>
 
@@ -55,9 +54,11 @@
             mapObj = L.map('route-map', { attributionControl: false }).setView(defaultCoord, zoomLevel);;
             var pane1 = mapObj.createPane('pane1');
             var pane2 = mapObj.createPane('pane2');
+            var pane3 = mapObj.createPane('pane3');
 
             pane1.style.zIndex = 1000;
             pane2.style.zIndex = 2000;
+            pane3.style.zIndex = 3000;
 
             // add tile để map có thể hoạt động, xài free từ OSM
             L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {

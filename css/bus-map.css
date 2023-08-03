@@ -1,14 +1,14 @@
 /* Station Icon: BEGIN */
 .station-icon-container {
     position: relative;
-    margin-top: -3rem;
-    margin-left: -2rem;
+    margin-top: -2.7rem;
+    margin-left: -0.5rem;
 }
 
 .station-div-image {
     display: block;
     margin: auto;
-    height: 4rem;
+    height: 3rem;
 }
 
 .station-div-span{
