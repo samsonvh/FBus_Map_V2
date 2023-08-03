@@ -40,7 +40,7 @@ const createRouteBoard = (routeDetails, active) => {
     //  Init route item
     const carouselItem = document.createElement('div');
     carouselItem.classList.add('carousel-item');
-    carouselItem.setAttribute('data-bs-interval', '10000');
+    carouselItem.setAttribute('data-bs-interval', '20000');
     if (active) {
         carouselItem.classList.add('active');
     }
