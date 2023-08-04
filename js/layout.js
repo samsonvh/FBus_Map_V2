@@ -20,6 +20,9 @@ var currentOrder = 0;
 var busMarkers = [];
 var firstStations = [];
 var oldEvent = null;
+var countDown = 0;
+var timer = null;
+var getting = false;
 
 //  Functions
 //  Access Back-end APIs
@@ -175,8 +178,7 @@ const createStationBoard = (carouselItem, stations) => {
     carouselItem.querySelector('.board-container').appendChild(stationBoard);
 };
 
-const createBusIcons = async (busId, firstStation, latitude, longitude) => {
-    var busDetails = await getBusDetails(busId);
+const createBusIcons = (busDetails, busId, firstStation, latitude, longitude) => {
 
     // Create Bus Marker
     var newBusMarker = L.marker([latitude, longitude], {
@@ -214,114 +216,165 @@ const createBusIcons = async (busId, firstStation, latitude, longitude) => {
 
 const trackBus = async (routeId, firstStation, mapObj) => {
     const busRef = ref(database, 'locations/' + routeId + '/');
+    var busData;
+    var busIds;
 
-    for (const busMarker of busMarkers) {
-        console.log('routeId: ' + busMarker.routeId);
-        console.log(busMarker.routeId == currentRouteId)
-        // if (busMarker.routeId != currentRouteId) {
-            busMarker.added = false;
-            for (const bus of busMarker.buses) {
-                mapObj.removeLayer(bus.marker);
-                mapObj.removeControl(bus.busLine);
-            }
-            console.log('remove ' + busMarker.routeId)
-        // }
+    onValue(busRef, (snapshot) => {
+        busData = snapshot.val();
+        busIds = Object.keys(busData);
+    });
+
+
+    countDown = 0;
+
+    if (timer != null) {
+        clearInterval(timer);
     }
-
-    var busMarker = null;
-    for (const currentBusMarker of busMarkers) {
-        if (currentBusMarker.routeId == currentRouteId) {
-            busMarker = currentBusMarker;
-            break;
+    console.log('start')
+    timer = setInterval(async function () {
+        console.log('count: ' + countDown)
+        if (countDown == 5) {
+            countDown = 0;
         }
-    };
-    console.log(busMarker);
 
-    onValue(busRef, async (snapshot) => {
-        var busData = snapshot.val();
-        var busIds = Object.keys(busData);
+        if (countDown == 0) {
+            console.log('enter')
+            if (routeId == currentRouteId) {
 
-        if (routeId == currentRouteId) {
-            for (const busId of busIds) {
-                const latitude = busData[busId].latitude;
-                const longitude = busData[busId].longitude;
-
-                console.log(latitude, longitude);
-
-                if (busMarker != null) {
-                    var bus = null;
-                    for (const currentBus of busMarker.buses) {
-                        if (currentBus.id == busId) {
-                            bus = currentBus;
-                            break;
-                        }
+                var busMarker = null;
+                for (const currentBusMarker of busMarkers) {
+                    if (currentBusMarker.routeId == currentRouteId) {
+                        busMarker = currentBusMarker;
+                        break;
                     }
-                    if (bus != null) {
-                        if (busMarker.added) {
+                };
+
+                for (const busId of busIds) {
+                    console.log(busId);
+                    const latitude = busData[busId].latitude;
+                    const longitude = busData[busId].longitude;
+
+                    if (busMarker != null) {
+                        var bus = null;
+                        for (const currentBus of busMarker.buses) {
+                            if (currentBus.id == busId) {
+                                bus = currentBus;
+                                break;
+                            }
+                        }
+                        if (bus != null) {
                             console.log('added');
                             bus.marker.setLatLng([latitude, longitude]);
-                            bus.busLine.remove();
-                            var newBusLine = L.Routing.control({
-                                waypoints: [
-                                    L.latLng(firstStation.latitude, firstStation.longitude),
-                                    L.latLng(latitude, longitude)
-                                ],
-                                fitSelectedRoutes: false,
-                                addWaypoints: false,
-                                draggableWaypoints: false,
-                                lineOptions: {
-                                    styles: [{ pane: 'pane2', color: '#82CD47', opacity: 1, weight: 5, }]
-                                },
-                                icon: new L.DivIcon({
-                                    className: 'my-div-icon',
-                                    html: ''
-                                })
-                            });
-                            bus.busLine = newBusLine;
-                            await bus.busLine.addTo(mapObj);
+                            bus.busLine.setWaypoints([
+                                L.latLng(firstStation.latitude, firstStation.longitude),
+                                L.latLng(latitude, longitude)
+                            ]);
                         } else {
-                            console.log('added');
-                            busMarker.added = true;
-                            bus.busLine.addTo(mapObj);
-                            bus.marker.addTo(mapObj);
+
                         }
                     } else {
-                        console.log('created');
-                        bus = await createBusIcons(busId, firstStation, latitude, longitude);
+                        var busDetails = await getBusDetails(busId);
+                        console.log('created ' + countDown);
+                        var bus = createBusIcons(busDetails, busId, firstStation, latitude, longitude);
                         bus.busLine.addTo(mapObj);
                         bus.marker.addTo(mapObj);
-                        busMarker.buses.push({
-                            id: busId,
-                            marker: bus.marker,
-                            busLine: bus.busLine
-                        });
+                        busMarker = {
+                            routeId: routeId,
+                            buses: [
+                                {
+                                    id: busId,
+                                    marker: bus.marker,
+                                    busLine: bus.busLine
+                                }
+                            ],
+                            added: true
+                        };
+                        busMarkers.push(busMarker);
                     }
-                } else {
-                    console.log('created');
-                    var bus = await createBusIcons(busId, firstStation, latitude, longitude);
-                    bus.busLine.addTo(mapObj);
-                    bus.marker.addTo(mapObj);
-                    busMarker = {
-                        routeId: routeId,
-                        buses: [
-                            {
-                                id: busId,
-                                marker: bus.marker,
-                                busLine: bus.busLine
-                            }
-                        ],
-                        added: true
-                    };
-                    busMarkers.push(busMarker);
                 }
+
+                // for (const busId of busIds) {
+                //     console.log(busId);
+                //     const latitude = busData[busId].latitude;
+                //     const longitude = busData[busId].longitude;
+
+                //     if (busMarker != null) {
+                //         var bus = null;
+                //         for (const currentBus of busMarker.buses) {
+                //             if (currentBus.id == busId) {
+                //                 bus = currentBus;
+                //                 break;
+                //             }
+                //         }
+                //         if (bus != null) {
+                //             if (busMarker.added) {
+                //                 console.log('added');
+                //                 bus.marker.setLatLng([latitude, longitude]);
+                //                 // if (bus.busLine._map != null) {
+                //                 //     console.log('remove 2')
+                //                 //     bus.busLine.remove();
+                //                 //     console.log(bus.busLine._map)
+                //                 // }
+                //                 // bus.busLine.setWaypoints([
+                //                 //     L.latLng(firstStation.latitude, firstStation.longitude),
+                //                 //     L.latLng(latitude, longitude)
+                //                 // ]);
+                //                 // bus.busLine.addTo(mapObj);
+                //             } else {
+                //                 console.log('added 2');
+                //                 busMarker.added = true;
+                //                 // bus.busLine.addTo(mapObj);
+                //                 bus.marker.addTo(mapObj);
+                //             }
+                //         } else {
+                //             var busDetails = await getBusDetails(busId);
+                //             console.log('created 2');
+                //             bus = createBusIcons(busDetails, busId, firstStation, latitude, longitude);
+                //             // bus.busLine.addTo(mapObj);
+                //             bus.marker.addTo(mapObj);
+                //             busMarker.buses.push({
+                //                 id: busId,
+                //                 marker: bus.marker,
+                //                 busLine: bus.busLine
+                //             });
+                //         }
+                //     } else {
+                //         var busDetails = await getBusDetails(busId);
+                //         console.log('created ' + countDown);
+                //         var bus = createBusIcons(busDetails, busId, firstStation, latitude, longitude);
+                //         // bus.busLine.addTo(mapObj);
+                //         bus.marker.addTo(mapObj);
+                //         busMarker = {
+                //             routeId: routeId,
+                //             buses: [
+                //                 {
+                //                     id: busId,
+                //                     marker: bus.marker,
+                //                     busLine: bus.busLine
+                //                 }
+                //             ],
+                //             added: true
+                //         };
+                //         busMarkers.push(busMarker);
+                //     }
+                // }
             }
         }
-    });
+        countDown += 1;
+    }, 1000)
 }
 
-const changeRoute = async (e, mapObj) => {
+const changeRoute = (e, mapObj) => {
+    var i = 0;
+    mapObj.eachLayer(function (layer) {
+        if (i > 0) {
+            mapObj.removeLayer(layer)
+        }
+        i++;
+    })
+
     if (oldEvent != null) {
-        console.log(e.timeStamp - oldEvent.timeStamp);
+        // console.log(e.timeStamp - oldEvent.timeStamp);
     }
     oldEvent = e;
     currentOrder += 1;
@@ -329,55 +382,22 @@ const changeRoute = async (e, mapObj) => {
         currentOrder = 0;
     }
     currentRouteId = waypoints[currentOrder].routeId;
-    routingControl.remove();
-    routingControl = L.Routing.control({
-        waypoints: waypoints[currentOrder].coor,
-        fitSelectedRoutes: true,
-        addWaypoints: false,
-        draggableWaypoints: false,
-        lineOptions: {
-            styles: [{ pane: 'pane1', color: '#e8772e', opacity: 1, weight: 5 }]
-        },
-        createMarker: function (i, waypoint, numbers) {
-            var marker;
-            switch (i) {
-                case 0:
-                    marker = L.marker(waypoint.latLng, {
-                        pane: 'pane3',
-                        icon: new L.DivIcon({
-                            className: 'my-div-icon',
-                            html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/start-marker.png"/>' + '</div>'
-                        })
-                    });
-                    break;
-                case waypoints[currentOrder].coor.length - 1:
-                    marker = L.marker(waypoint.latLng, {
-                        pane: 'pane3',
-                        icon: new L.DivIcon({
-                            className: 'my-div-icon',
-                            html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/end-marker.png"/>' + '</div>'
-                        })
-                    });
-                    break;
-                default:
-                    marker = L.marker(waypoint.latLng, {
-                        pane: 'pane3',
-                        icon: new L.DivIcon({
-                            className: 'my-div-icon',
-                            html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/station-marker.png"/>' + '</div>'
-                        })
-                    });
-            }
-            return marker;
+
+    for (const busMarker of busMarkers) {
+        if (busMarker.routeId != currentRouteId) {
+            busMarkers.pop(busMarker)
         }
-    }).addTo(mapObj);
-    await trackBus(currentRouteId, firstStations[currentOrder], mapObj);
+    }
+
+    routingControl.setWaypoints(waypoints[currentOrder].coor);
+    routingControl.addTo(mapObj);
+    trackBus(currentRouteId, firstStations[currentOrder], mapObj);
 }
 
 const setCarouselOnChange = (mapObj) => {
     var mapCarousel = document.getElementById('map-container');
     mapCarousel.addEventListener('slid.bs.carousel', async function (e) {
-        await changeRoute(e, mapObj);
+        setTimeout(changeRoute(e, mapObj), 500);
     });
 }
 
@@ -385,7 +405,13 @@ export async function createRouteBoards(mapObj) {
     if (routeDataChanged) {
         console.log('get new');
         routeData = await getRouteData();
-        mapObj.removeControl(routingControl);
+        var i = 0;
+        mapObj.eachLayer(function (layer) {
+            if (i > 0) {
+                mapObj.removeLayer(layer)
+            }
+            i++;
+        })
 
         routeIds = [];
         waypoints = [];
@@ -394,6 +420,12 @@ export async function createRouteBoards(mapObj) {
         currentOrder = 0;
         busMarkers = [];
         firstStations = [];
+        oldEvent = null;
+        countDown = 0;
+        if (timer != null) {
+            clearInterval(timer);
+        }
+        timer = null;
     }
     routeIds = Object.keys(routeData);
     var isFirst = true;
@@ -408,6 +440,7 @@ export async function createRouteBoards(mapObj) {
             currentRouteId = null;
         }
     }
+    var firstRouteDetails;
     for (const routeId of routeIds) {
         if (currentRouteId != null) {
             if (routeId == currentRouteId) {
@@ -420,50 +453,57 @@ export async function createRouteBoards(mapObj) {
         createStationBoard(carouselItem, routeDetails.routeStations);
         if (routingControl == null) {
             currentRouteId = routeId;
-            routingControl = L.Routing.control({
-                waypoints: waypoints[currentOrder].coor,
-                fitSelectedRoutes: true,
-                addWaypoints: false,
-                draggableWaypoints: false,
-                lineOptions: {
-                    styles: [{ pane: 'pane1', color: '#e8772e', opacity: 1, weight: 5 }]
-                },
-                createMarker: function (i, waypoint, numbers) {
-                    var marker;
-                    switch (i) {
-                        case 0:
-                            marker = L.marker(waypoint.latLng, {
-                                pane: 'pane3',
-                                icon: new L.DivIcon({
-                                    className: 'my-div-icon',
-                                    html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/start-marker.png"/>' + '</div>'
-                                })
-                            });
-                            break;
-                        case waypoints[currentOrder].coor.length - 1:
-                            marker = L.marker(waypoint.latLng, {
-                                pane: 'pane3',
-                                icon: new L.DivIcon({
-                                    className: 'my-div-icon',
-                                    html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/end-marker.png"/>' + '</div>'
-                                })
-                            });
-                            break;
-                        default:
-                            marker = L.marker(waypoint.latLng, {
-                                pane: 'pane3',
-                                icon: new L.DivIcon({
-                                    className: 'my-div-icon',
-                                    html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/station-marker.png"/>' + '</div>'
-                                })
-                            });
-                    }
-                    return marker;
-                }
-            }).addTo(mapObj);
-            await trackBus(routeId, routeDetails.routeStations[0].station, mapObj);
+            firstRouteDetails = routeDetails;
         }
         isFirst = false;
+    }
+    mapObj.eachLayer(function (layer) {
+        console.log(layer)
+    })
+
+    if (routingControl == null) {
+        routingControl = L.Routing.control({
+            waypoints: waypoints[currentOrder].coor,
+            fitSelectedRoutes: true,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            lineOptions: {
+                styles: [{ pane: 'pane1', color: '#e8772e', opacity: 1, weight: 5 }]
+            },
+            createMarker: function (i, waypoint, numbers) {
+                var marker;
+                switch (i) {
+                    case 0:
+                        marker = L.marker(waypoint.latLng, {
+                            pane: 'pane3',
+                            icon: new L.DivIcon({
+                                className: 'my-div-icon',
+                                html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/start-marker.png"/>' + '</div>'
+                            })
+                        });
+                        break;
+                    case waypoints[currentOrder].coor.length - 1:
+                        marker = L.marker(waypoint.latLng, {
+                            pane: 'pane3',
+                            icon: new L.DivIcon({
+                                className: 'my-div-icon',
+                                html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/end-marker.png"/>' + '</div>'
+                            })
+                        });
+                        break;
+                    default:
+                        marker = L.marker(waypoint.latLng, {
+                            pane: 'pane3',
+                            icon: new L.DivIcon({
+                                className: 'my-div-icon',
+                                html: '<div class="station-icon-container"><span class="station-div-span">' + waypoints[currentOrder].names[i] + '</span>' + '<img class="station-div-image" alt="station" src="../img/station-marker.png"/>' + '</div>'
+                            })
+                        });
+                }
+                return marker;
+            }
+        }).addTo(mapObj);
+        // trackBus(currentRouteId, firstRouteDetails.routeStations[0].station, mapObj);
     }
     setCarouselOnChange(mapObj);
 }

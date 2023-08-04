@@ -51,7 +51,12 @@
         var myCarousel = document.querySelector('#map-container');
 
         window.onload = async function () {
-            mapObj = L.map('route-map', { attributionControl: false }).setView(defaultCoord, zoomLevel);;
+            mapObj = L.map('route-map', {
+                attributionControl: false,
+                scrollWheelZoom: false,
+                dragging: false,
+                tap: false
+            }).setView(defaultCoord, zoomLevel);;
             var pane1 = mapObj.createPane('pane1');
             var pane2 = mapObj.createPane('pane2');
             var pane3 = mapObj.createPane('pane3');
